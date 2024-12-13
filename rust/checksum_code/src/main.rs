@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::{Read, BufReader};
 use sha2::{Sha256, Digest};
 
+// 1:1 checksum generation
 fn generate_file_checksum(filepath: &str) -> Result<String, std::io::Error> {
     let start = Instant::now();
 
