@@ -1,3 +1,3 @@
-module file_processor_go
+module file-processor-lab
 
 go 1.23.4
