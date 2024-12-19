@@ -1,47 +1,69 @@
 package main
 
 import (
-    "crypto/sha256"
-    "fmt"
-    "io"
-    "os"
-    "time"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 )
 
-func generateChecksum(file string) (string, error) {
-    startTime := time.Now()
+type FileData struct {
+	File *os.File
+}
 
-    hashAlgorithm := sha256.New()
+func ReadFile(file string) (*FileData, error) {
+	data, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	return &FileData{File: data}, nil
+}
 
-    f, err := os.Open(file)
-    if err != nil {
-        return "", fmt.Errorf("file not found")
-    }
-    defer f.Close()
+func (fd *FileData) GenerateChecksum() (string, error) {
+	hashAlgorithm := sha256.New()
+	buffer := make([]byte, 8192)
 
-    buffer := make([]byte, 8192)
-    for {
-        n, err := f.Read(buffer)
-        if err != nil && err != io.EOF {
-            return "", err
-        }
-        if n == 0 {
-            break
-        }
-        hashAlgorithm.Write(buffer[:n])
-    }
+	for {
+		n, err := fd.File.Read(buffer)
+		if err != nil && err != io.EOF {
+			return "", err
+		}
+		if n == 0 {
+			break
+		}
+		hashAlgorithm.Write(buffer[:n])
+	}
+	defer fd.File.Close()
+	
+	hashByte := hashAlgorithm.Sum(nil)
+	hashHex := hex.EncodeToString(hashByte)
 
-    duration := time.Since(startTime).Milliseconds()
-    fmt.Println(duration)
-
-    return fmt.Sprintf("%x", hashAlgorithm.Sum(nil)), nil
+	return hashHex, nil
 }
 
 func main() {
-    checksum, err := generateChecksum("test_file.dpx")
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
-    fmt.Println(checksum)
+	dirPath := "/workspaces/file-processor-lab/test_files"
+	filePath := filepath.Join(dirPath, "*.dpx")
+
+	fileList, err := filepath.Glob(filePath)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	for _, file := range fileList {
+
+	fd, err := ReadFile(file)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	checksum, err := fd.GenerateChecksum()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+	fmt.Println(checksum)
+	}
 }
