@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
+	"time"
 )
 
 type FileData struct {
@@ -36,7 +38,7 @@ func (fd *FileData) GenerateChecksum() (string, error) {
 		hashAlgorithm.Write(buffer[:n])
 	}
 	defer fd.File.Close()
-	
+
 	hashByte := hashAlgorithm.Sum(nil)
 	hashHex := hex.EncodeToString(hashByte)
 
@@ -44,26 +46,40 @@ func (fd *FileData) GenerateChecksum() (string, error) {
 }
 
 func main() {
-	dirPath := "/workspaces/file-processor-lab/test_files"
-	filePath := filepath.Join(dirPath, "*.dpx")
+
+	start := time.Now()
+
+	dirPath := "/workspaces/file-processor-lab/_test_files"
+	filePath := filepath.Join(dirPath, "*.m4a")
 
 	fileList, err := filepath.Glob(filePath)
 	if err != nil {
 		fmt.Println(err)
 	}
 
+	var wg sync.WaitGroup
+
 	for _, file := range fileList {
+		wg.Add(1)
+		go func(file string) {
+			defer wg.Done()
 
-	fd, err := ReadFile(file)
-	if err != nil {
-		fmt.Println(err)
+			fd, err := ReadFile(file)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			checksum, err := fd.GenerateChecksum()
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			fmt.Println(checksum)
+		}(file)
 	}
 
-	checksum, err := fd.GenerateChecksum()
-		if err != nil {
-			fmt.Println(err)
-		}
+	wg.Wait()
 
-	fmt.Println(checksum)
-	}
+	duration := time.Since(start)
+	fmt.Println("Time taken: ", duration)
 }
