@@ -3,5 +3,5 @@ debug/
 Cargo.lock
 *.pdb
 **/*.rs.bk
-**/test_file.dpx
-test_files/
+_test_files/
+_dependencies/
