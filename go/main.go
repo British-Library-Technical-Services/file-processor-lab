@@ -1,49 +1,14 @@
 package main
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"io"
-	"os"
 	"path/filepath"
 	"sync"
 	"time"
+	"file-processor-lab/fileutil"
+	"file-processor-lab/hashutil"
+	"file-processor-lab/transcodeutil"
 )
-
-type FileData struct {
-	File *os.File
-}
-
-func ReadFile(file string) (*FileData, error) {
-	data, err := os.Open(file)
-	if err != nil {
-		return nil, err
-	}
-	return &FileData{File: data}, nil
-}
-
-func (fd *FileData) GenerateChecksum() (string, error) {
-	hashAlgorithm := sha256.New()
-	buffer := make([]byte, 8192)
-
-	for {
-		n, err := fd.File.Read(buffer)
-		if err != nil && err != io.EOF {
-			return "", err
-		}
-		if n == 0 {
-			break
-		}
-		hashAlgorithm.Write(buffer[:n])
-	}
-	defer fd.File.Close()
-
-	hashByte := hashAlgorithm.Sum(nil)
-	hashHex := hex.EncodeToString(hashByte)
-
-	return hashHex, nil
-}
 
 func main() {
 
@@ -64,17 +29,25 @@ func main() {
 		go func(file string) {
 			defer wg.Done()
 
-			fd, err := ReadFile(file)
+			fd, err := fileutil.ReadFile(file)
 			if err != nil {
 				fmt.Println(err)
 			}
 
-			checksum, err := fd.GenerateChecksum()
+			checksum, err := hashutil.GenerateChecksum(fd)
 			if err != nil {
 				fmt.Println(err)
+			}
+
+
+			transcode, err := transcodeutil.FileTranscode(fd)
+			if err != nil {
+				fmt.Print(err)
 			}
 
 			fmt.Println(checksum)
+			fmt.Println(transcode)
+
 		}(file)
 	}
 
@@ -82,4 +55,10 @@ func main() {
 
 	duration := time.Since(start)
 	fmt.Println("Time taken: ", duration)
+
+	_, err = fileutil.FileCleanUp() 
+	if err != nil {
+		fmt.Println(err)
+	}
+	
 }
