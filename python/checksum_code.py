@@ -6,8 +6,6 @@ import multiprocessing as mp
 from functools import partial
 import time
 
-
-### 1:1 chekcsum generation
 def generate_checksum(file):
     # start_time = time.time()
 
@@ -48,7 +46,7 @@ def process_file(location, file):
         checksum = generate_checksum(file)
         print(checksum)
 
-    #     file_transform(location, file)
+        file_transform(location, file)
         return True
     except Exception as e:
         print(e)
@@ -72,4 +70,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # cleanup()
+    cleanup()
