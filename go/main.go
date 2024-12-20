@@ -15,7 +15,7 @@ func main() {
 	start := time.Now()
 
 	dirPath := "/workspaces/file-processor-lab/_test_files"
-	filePath := filepath.Join(dirPath, "*.m4a")
+	filePath := filepath.Join(dirPath, "*.wav")
 
 	fileList, err := filepath.Glob(filePath)
 	if err != nil {
