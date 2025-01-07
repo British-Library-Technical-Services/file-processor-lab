@@ -5,18 +5,21 @@ use std::io::{BufReader, Read};
 use sha2::{Sha256, Digest};
 use glob::glob;
 
-fn get_file_list(pattern: &str) -> Vec<String>  {
+fn get_file_list(pattern: &str) -> Vec<String> {
     let mut file_list = Vec::new();
-    for entry in glob(pattern).expect("Failed to read glob pattern") {
+
+    for entry in glob(pattern).expect("failed to read glob pattern") {
         match entry {
-            Ok(path) => {
+            Ok(entry) => {
+                let path = entry.as_path();
                 file_list.push(path.display().to_string());
-            },
-            Err(e) => { 
+            }
+            Err(e) => {
                 println!("{:?}", e)
             }
         }
     }
+    println!("{}", file_list.len());
     file_list
 }
 
@@ -25,6 +28,7 @@ fn generate_checksum(file_path: &str) -> String {
     let mut reader = BufReader::new(file);
     let mut hasher = Sha256::new();
     let mut buffer = [0; 1024];
+
     loop {
         let n = reader.read(&mut buffer).expect("Failed to read file");
         if n == 0 {
@@ -33,12 +37,11 @@ fn generate_checksum(file_path: &str) -> String {
             hasher.update(&buffer[..n]);
         }
     }
-    let result = hasher.finalize();
-    format!("{:x}", result)
+    format!("{:x}", hasher.finalize())
 }
 
 fn main() {
-    let file_path = "/workspaces/file-processor-lab/_test_files/*.wav";
+    let file_path = "/workspaces/file-processor-lab/_test_files/*.*";
     let files = get_file_list(file_path);
     let start = Instant::now();
 
